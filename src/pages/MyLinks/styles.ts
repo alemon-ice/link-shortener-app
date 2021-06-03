@@ -17,3 +17,26 @@ export const Title = styled.Text`
 
 export const LinksList = styled.FlatList``
 
+export const EmptyList = styled.View`
+  margin-top: 15%;
+  align-items: center;
+`
+
+export const Message = styled.Text`
+  font-size: 17px;
+  color: ${colors.white};
+  margin-bottom: 15px;
+`
+
+export const Button = styled.TouchableOpacity`
+  align-items: center;
+  justify-content: center;
+  height: 45px;
+  background-color: ${colors.white};
+  border-radius: 7px;
+  padding: 0 15px;
+`
+
+export const ButtonText = styled.Text`
+  font-size: 18px;
+`

@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Feather } from '@expo/vector-icons'
 
 import { generateShortURL } from '../../services/bitly.service'
+import { addNewURL } from '../../services/storage.service'
 import { IUrlData } from '../../interfaces/Url'
 import { StatusBarView, Menu, ModalLink } from '../../components'
 import { colors } from '../../styles/colors'
@@ -27,19 +28,18 @@ import {
   LoadingText,
 } from './styles'
 
-const emptyUrls = {
-  id: '',
+const emptyUrl = {
   longUrl: '',
   shortUrl: '',
 }
 
 const Home: React.FC = () => {
-  const [urls, setUrls] = useState<IUrlData>(emptyUrls)
+  const [url, setUrl] = useState<IUrlData>(emptyUrl)
   const [isLoading, setIsLoading] = useState(false)
   const [modalIsVisible, setModalIsVisible] = useState(false)
 
   const onCloseModal = useCallback(() => {
-    setUrls(emptyUrls)
+    setUrl(emptyUrl)
     setModalIsVisible(false)
   }, [])
 
@@ -47,15 +47,20 @@ const Home: React.FC = () => {
     try {
       setIsLoading(true)
 
-      const responseData = await generateShortURL(urls.longUrl)
-      setUrls({ ...urls, shortUrl: responseData.link })
+      const responseData = await generateShortURL(url.longUrl)
+      const payload = {
+        ...url,
+        shortUrl: responseData.link,
+      }
+      setUrl(payload)
+      await addNewURL(payload)
 
       setModalIsVisible(true)
     } catch (err) {
       console.error(`Erro ao gerar link encurtado: ${err}`)
       alert('Ops... parece que algo deu errado...')
       
-      setUrls(emptyUrls)
+      setUrl(emptyUrl)
       Keyboard.dismiss()
     } finally {
       setIsLoading(false)
@@ -100,8 +105,8 @@ const Home: React.FC = () => {
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
-                onChangeText={value => setUrls({ ...urls, longUrl: value })}
-                value={urls.longUrl}
+                onChangeText={value => setUrl({ ...url, longUrl: value })}
+                value={url.longUrl}
               />
             </InputWrapper>
 
@@ -120,7 +125,7 @@ const Home: React.FC = () => {
         <ModalLink
           isVisible={modalIsVisible}
           onClose={onCloseModal}
-          urls={urls}
+          urls={url}
         />
       </LinearGradient>
     </TouchableWithoutFeedback>

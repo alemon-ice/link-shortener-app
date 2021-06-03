@@ -1,31 +1,26 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
+import { useIsFocused, useNavigation } from '@react-navigation/native'
 
+import { getAllUrls } from '../../services/storage.service'
 import { IUrlData } from '../../interfaces/Url'
 import { StatusBarView, Menu, ListItem, ModalLink } from '../../components'
 import { colors } from '../../styles/colors'
 
-import { Container, Title, LinksList } from './styles'
-
-interface ILink {
-  id: string
-  longUrl: string
-  shortUrl: string
-}
-
-const data: ILink[] = [
-  {
-    id: '1',
-    longUrl: 'https://www.google.com.br',
-    shortUrl: 'google.com',
-  },
-  {
-    id: '2',
-    longUrl: 'https://alemon-ice.github.io',
-    shortUrl: 'bit.ly/alemon-ice',
-  }
-]
+import {
+  Container,
+  Title,
+  LinksList,
+  EmptyList,
+  Message,
+  Button,
+  ButtonText,
+} from './styles'
 
 const MyLinks: React.FC = () => {
+  const isFocused = useIsFocused()
+  const { goBack } = useNavigation()
+
+  const [urlsList, setUrlsList] = useState<IUrlData[]>([])
   const [selectedItem, setSelectedItem] = useState<IUrlData | null>(null)
 
   const onChangeItem = useCallback((item: IUrlData) => {
@@ -35,6 +30,16 @@ const MyLinks: React.FC = () => {
   const onCloseModal = useCallback(() => {
     setSelectedItem(null)
   }, [])
+
+  const changeList = useCallback((urls: IUrlData[]) => {
+    setUrlsList(urls)
+  }, [])
+
+  useEffect(() => {
+    (async () => {
+      setUrlsList(await getAllUrls())
+    })()
+  }, [isFocused])
 
   return (
     <Container>
@@ -47,15 +52,30 @@ const MyLinks: React.FC = () => {
 
       <Title>Meus Links</Title>
 
-      <LinksList
-        data={data}
-        keyExtractor={(item: any) => item.id}
-        renderItem={({ item }) => (
-          <ListItem data={item as ILink} onPress={onChangeItem} />
-        )}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
-      />
+      {
+        urlsList.length > 0 ? (
+          <LinksList
+            data={urlsList}
+            keyExtractor={(item: any) => item.longUrl}
+            renderItem={({ item }) => (
+              <ListItem
+                data={item as IUrlData}
+                onPress={onChangeItem}
+                setList={changeList}
+              />
+            )}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <EmptyList>
+            <Message>Você não possui nenhum link!</Message>
+            <Button onPress={goBack}>
+              <ButtonText>Gerar novo Link</ButtonText>
+            </Button>
+          </EmptyList>
+        )
+      }
 
       {
         !!selectedItem && (
